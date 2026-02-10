@@ -13,7 +13,9 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   1000
 );
-camera.position.z = 5;
+// Responsive camera distance - closer on mobile for full vertical view
+const isMobile = window.innerWidth < 768;
+camera.position.z = isMobile ? 3.5 : 5;
 
 // Renderer setup
 const renderer = new THREE.WebGLRenderer({ 
@@ -76,14 +78,16 @@ const createRetroMaterial = (color) => {
 };
 
 // Create Ethereum logo geometry (two pyramids)
-const pyramidGeometry = new THREE.TetrahedronGeometry(1, 0); // Low poly!
+// Scale up on mobile for better vertical fill
+const logoScale = isMobile ? 1.8 : 1;
+const pyramidGeometry = new THREE.TetrahedronGeometry(logoScale, 0); // Low poly!
 
 // Top pyramid (pointing up)
 const topPyramid = new THREE.Mesh(
   pyramidGeometry,
   createRetroMaterial(0x8c8cff) // Purple-ish blue
 );
-topPyramid.position.y = 0.6;
+topPyramid.position.y = 0.6 * logoScale;
 scene.add(topPyramid);
 
 // Bottom pyramid (pointing down - flip it)
@@ -91,7 +95,7 @@ const bottomPyramid = new THREE.Mesh(
   pyramidGeometry,
   createRetroMaterial(0x4c4ccc) // Darker blue
 );
-bottomPyramid.position.y = -0.6;
+bottomPyramid.position.y = -0.6 * logoScale;
 bottomPyramid.rotation.x = Math.PI; // Flip upside down
 scene.add(bottomPyramid);
 
@@ -126,8 +130,8 @@ function animate() {
   bottomPyramid.rotation.y = time * 0.5;
   
   // Slight bob animation
-  topPyramid.position.y = 0.6 + Math.sin(time) * 0.1;
-  bottomPyramid.position.y = -0.6 - Math.sin(time) * 0.1;
+  topPyramid.position.y = (0.6 * logoScale) + Math.sin(time) * 0.1;
+  bottomPyramid.position.y = (-0.6 * logoScale) - Math.sin(time) * 0.1;
   
   // Update shader time
   topPyramid.material.uniforms.time.value = time;
@@ -141,9 +145,17 @@ function animate() {
 
 // Handle window resize
 window.addEventListener('resize', () => {
+  const wasMobile = camera.position.z < 4.5;
+  const nowMobile = window.innerWidth < 768;
+  
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
+  
+  // Adjust camera distance on mobile/desktop switch
+  if (wasMobile !== nowMobile) {
+    camera.position.z = nowMobile ? 3.5 : 5;
+  }
 });
 
 animate();
