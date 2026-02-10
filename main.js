@@ -15,7 +15,8 @@ const camera = new THREE.PerspectiveCamera(
 );
 // Responsive camera distance - closer on mobile for full vertical view
 const isMobile = window.innerWidth < 768;
-camera.position.z = isMobile ? 3.5 : 5;
+camera.position.set(0, 3, isMobile ? 4 : 6); // Higher up, looking down
+camera.lookAt(0, 0, 0); // Point camera at origin
 
 // Renderer setup
 const renderer = new THREE.WebGLRenderer({ 
@@ -47,6 +48,7 @@ const vertexShader = `
 const fragmentShader = `
   uniform vec3 color;
   uniform float time;
+  uniform float opacity;
   varying vec3 vNormal;
   varying vec3 vPosition;
   
@@ -60,7 +62,7 @@ const fragmentShader = `
     brightness = brightness * 0.6 + 0.4; // Ensure minimum brightness
     
     vec3 finalColor = color * brightness;
-    gl_FragColor = vec4(finalColor, 1.0);
+    gl_FragColor = vec4(finalColor, opacity);
   }
 `;
 
@@ -81,28 +83,50 @@ const createRetroMaterial = (color) => {
 // Scale up on mobile for better vertical fill
 const logoScale = isMobile ? 1.8 : 1;
 
-// Square-based pyramid (like Great Pyramids) - flat base, pointed top
+// Top pyramid - taller like Ethereum logo
 const topPyramidGeometry = new THREE.ConeGeometry(
   logoScale,      // base radius
-  logoScale * 1.2, // height (slightly taller for better proportions)
+  logoScale * 2.5, // much taller height for Ethereum proportions
   4               // 4 radial segments = square base
 );
+
+// Bottom pyramid - shorter
+const bottomPyramidGeometry = new THREE.ConeGeometry(
+  logoScale,      // base radius
+  logoScale * 1.5, // shorter than top
+  4               // 4 radial segments = square base
+);
+
+// Create custom material with transparency
+const createTransparentMaterial = (color, opacity) => {
+  return new THREE.ShaderMaterial({
+    uniforms: {
+      color: { value: new THREE.Color(color) },
+      time: { value: 0 },
+      opacity: { value: opacity }
+    },
+    vertexShader,
+    fragmentShader,
+    transparent: true,
+    flatShading: true
+  });
+};
 
 // Top pyramid (flat bottom, point up)
 const topPyramid = new THREE.Mesh(
   topPyramidGeometry,
-  createRetroMaterial(0x8c8cff) // Purple-ish blue
+  createTransparentMaterial(0x8c8cff, 0.8) // Translucent purple-blue
 );
-topPyramid.position.y = 0.6 * logoScale;
+topPyramid.position.y = 1.5 * logoScale; // Higher up, spaced out
 topPyramid.rotation.y = Math.PI / 4; // Rotate 45° so edges face front
 scene.add(topPyramid);
 
 // Bottom pyramid (flat top, point down - flip the same geometry)
 const bottomPyramid = new THREE.Mesh(
-  topPyramidGeometry,
-  createRetroMaterial(0x4c4ccc) // Darker blue
+  bottomPyramidGeometry,
+  createTransparentMaterial(0x4c4ccc, 0.8) // Translucent darker blue
 );
-bottomPyramid.position.y = -0.6 * logoScale;
+bottomPyramid.position.y = -1.2 * logoScale; // Lower, spaced out from top
 bottomPyramid.rotation.x = Math.PI; // Flip upside down
 bottomPyramid.rotation.y = Math.PI / 4; // Match rotation
 scene.add(bottomPyramid);
@@ -138,8 +162,8 @@ function animate() {
   bottomPyramid.rotation.y = time * 0.5;
   
   // Slight bob animation
-  topPyramid.position.y = (0.6 * logoScale) + Math.sin(time) * 0.1;
-  bottomPyramid.position.y = (-0.6 * logoScale) - Math.sin(time) * 0.1;
+  topPyramid.position.y = (1.5 * logoScale) + Math.sin(time) * 0.1;
+  bottomPyramid.position.y = (-1.2 * logoScale) - Math.sin(time) * 0.1;
   
   // Update shader time
   topPyramid.material.uniforms.time.value = time;
@@ -153,7 +177,7 @@ function animate() {
 
 // Handle window resize
 window.addEventListener('resize', () => {
-  const wasMobile = camera.position.z < 4.5;
+  const wasMobile = camera.position.z < 5;
   const nowMobile = window.innerWidth < 768;
   
   camera.aspect = window.innerWidth / window.innerHeight;
@@ -162,7 +186,8 @@ window.addEventListener('resize', () => {
   
   // Adjust camera distance on mobile/desktop switch
   if (wasMobile !== nowMobile) {
-    camera.position.z = nowMobile ? 3.5 : 5;
+    camera.position.set(0, 3, nowMobile ? 4 : 6);
+    camera.lookAt(0, 0, 0);
   }
 });
 
