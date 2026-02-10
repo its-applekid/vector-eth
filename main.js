@@ -15,8 +15,10 @@ const camera = new THREE.PerspectiveCamera(
 );
 // Responsive camera distance - closer on mobile for full vertical view
 const isMobile = window.innerWidth < 768;
-camera.position.set(0, 3, isMobile ? 4 : 6); // Higher up, looking down
-camera.lookAt(0, 0, 0); // Point camera at origin
+// Position camera to see both pyramids - centered between them
+const pyramidMidpoint = (1.1 - 0.9) / 2; // Average of top and bottom Y positions
+camera.position.set(0, pyramidMidpoint + 1.5, isMobile ? 4 : 6); // Centered, looking slightly down
+camera.lookAt(0, pyramidMidpoint, 0); // Look at center point between pyramids
 
 // Renderer setup
 const renderer = new THREE.WebGLRenderer({ 
@@ -158,9 +160,9 @@ let isInPause = true; // Start in pause
 let pauseStartTime = 0; // When current pause started
 
 const PAUSE_DURATION = 2.0; // 2 seconds
-const ROTATION_DISTANCE = Math.PI; // 180° between pauses
-const BASE_ROTATION_SPEED = 0.5; // Base rotation speed
-const EASE_DURATION = 0.4; // Ease in/out duration (in seconds)
+const ROTATION_DISTANCE = Math.PI / 2; // 90° between pauses
+const BASE_ROTATION_SPEED = 0.15; // Slower rotation speed
+const EASE_DURATION = 0.5; // Ease in/out duration (in seconds)
 
 function animate() {
   requestAnimationFrame(animate);
@@ -176,8 +178,8 @@ function animate() {
       // Pause finished, start rotating to next target
       isInPause = false;
       rotationPhaseTime = 0;
-      // Next target is 180° away
-      currentTargetAngle = (currentTargetAngle + Math.PI) % (Math.PI * 2);
+      // Next target is 90° away
+      currentTargetAngle = (currentTargetAngle + Math.PI / 2) % (Math.PI * 2);
     }
   } else {
     // In rotation state
@@ -204,7 +206,7 @@ function animate() {
     }
     
     // Calculate current angle
-    const startAngle = (currentTargetAngle - Math.PI + Math.PI * 2) % (Math.PI * 2);
+    const startAngle = (currentTargetAngle - Math.PI / 2 + Math.PI * 2) % (Math.PI * 2);
     const currentAngle = startAngle + easedProgress * ROTATION_DISTANCE;
     
     // Apply rotation
@@ -247,8 +249,9 @@ window.addEventListener('resize', () => {
   
   // Adjust camera distance on mobile/desktop switch
   if (wasMobile !== nowMobile) {
-    camera.position.set(0, 3, nowMobile ? 4 : 6);
-    camera.lookAt(0, 0, 0);
+    const pyramidMidpoint = (1.1 - 0.9) / 2;
+    camera.position.set(0, pyramidMidpoint + 1.5, nowMobile ? 4 : 6);
+    camera.lookAt(0, pyramidMidpoint, 0);
   }
 });
 
