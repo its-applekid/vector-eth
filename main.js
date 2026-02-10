@@ -117,8 +117,8 @@ const topPyramid = new THREE.Mesh(
   topPyramidGeometry,
   createTransparentMaterial(0x8c8cff, 0.8) // Translucent purple-blue
 );
-topPyramid.position.y = 1.0 * logoScale; // Closer together
-topPyramid.rotation.y = Math.PI / 4; // Start at Ethereum logo angle
+topPyramid.position.y = 1.1 * logoScale; // Slightly apart
+topPyramid.rotation.y = 0; // Start with vertex facing camera
 scene.add(topPyramid);
 
 // Bottom pyramid (flat top, point down - flip the same geometry)
@@ -126,9 +126,9 @@ const bottomPyramid = new THREE.Mesh(
   bottomPyramidGeometry,
   createTransparentMaterial(0x4c4ccc, 0.8) // Translucent darker blue
 );
-bottomPyramid.position.y = -0.8 * logoScale; // Closer together
+bottomPyramid.position.y = -0.9 * logoScale; // Slightly apart
 bottomPyramid.rotation.x = Math.PI; // Flip upside down
-bottomPyramid.rotation.y = Math.PI / 4; // Start at Ethereum logo angle
+bottomPyramid.rotation.y = 0; // Start with vertex facing camera
 scene.add(bottomPyramid);
 
 // Add some retro stars in the background
@@ -159,27 +159,29 @@ function animate() {
   
   time += 0.01;
   
-  // Calculate rotation with pause at Ethereum logo angle (Math.PI / 4)
-  // Rotation cycle: 0 to 2π, pause at π/4, 5π/4 (every 180° from start)
+  // Calculate rotation with pause at Ethereum logo angle (0, π, 2π - vertex facing camera)
   const baseSpeed = 0.3;
   const currentAngle = rotationTime % (Math.PI * 2);
-  const targetAngle = Math.PI / 4; // Ethereum logo orientation
   
-  // Calculate distance to nearest pause point (π/4 or 5π/4)
-  const pausePoints = [Math.PI / 4, Math.PI / 4 + Math.PI];
+  // Calculate distance to nearest pause point (0 or π - every 180°)
+  const pausePoints = [0, Math.PI];
   let minDist = Infinity;
   for (const point of pausePoints) {
-    const dist = Math.abs(((currentAngle - point + Math.PI) % (Math.PI * 2)) - Math.PI);
+    const dist = Math.min(
+      Math.abs(currentAngle - point),
+      Math.abs(currentAngle - point - Math.PI * 2),
+      Math.abs(currentAngle - point + Math.PI * 2)
+    );
     minDist = Math.min(minDist, dist);
   }
   
   // Speed modulation: slow down near pause, pause briefly, speed back up
-  const pauseThreshold = 0.15; // Start slowing at this distance
-  const pauseZone = 0.02; // Actual pause zone
+  const pauseThreshold = 0.2; // Start slowing at this distance
+  const pauseZone = 0.05; // Actual pause zone
   
   let speed;
   if (minDist < pauseZone) {
-    speed = 0; // Full pause
+    speed = 0.02; // Very slow during pause (not full stop to avoid getting stuck)
   } else if (minDist < pauseThreshold) {
     // Smooth ease in/out using cosine
     const t = (minDist - pauseZone) / (pauseThreshold - pauseZone);
@@ -195,8 +197,8 @@ function animate() {
   bottomPyramid.rotation.y = rotationTime;
   
   // Bob animation (middle ground, continues during pause)
-  topPyramid.position.y = (1.0 * logoScale) + Math.sin(time) * 0.065;
-  bottomPyramid.position.y = (-0.8 * logoScale) - Math.sin(time) * 0.065;
+  topPyramid.position.y = (1.1 * logoScale) + Math.sin(time) * 0.065;
+  bottomPyramid.position.y = (-0.9 * logoScale) - Math.sin(time) * 0.065;
   
   // Update shader time
   topPyramid.material.uniforms.time.value = time;
