@@ -150,51 +150,77 @@ const starMaterial = new THREE.PointsMaterial({
 const stars = new THREE.Points(starGeometry, starMaterial);
 scene.add(stars);
 
-// Animation
+// Animation with 2-second pauses
 let time = 0;
-let rotationTime = 0;
+let rotationPhaseTime = 0; // Time within current rotation phase
+let currentTargetAngle = 0; // Current pause angle (0 or π)
+let isInPause = true; // Start in pause
+let pauseStartTime = 0; // When current pause started
+
+const PAUSE_DURATION = 2.0; // 2 seconds
+const ROTATION_DISTANCE = Math.PI; // 180° between pauses
+const BASE_ROTATION_SPEED = 0.5; // Base rotation speed
+const EASE_DURATION = 0.4; // Ease in/out duration (in seconds)
 
 function animate() {
   requestAnimationFrame(animate);
   
-  time += 0.01;
+  const deltaTime = 0.016; // ~60fps
+  time += deltaTime;
   
-  // Calculate rotation with pause at Ethereum logo angle (0, π, 2π - vertex facing camera)
-  const baseSpeed = 0.3;
-  const currentAngle = rotationTime % (Math.PI * 2);
-  
-  // Calculate distance to nearest pause point (0 or π - every 180°)
-  const pausePoints = [0, Math.PI];
-  let minDist = Infinity;
-  for (const point of pausePoints) {
-    const dist = Math.min(
-      Math.abs(currentAngle - point),
-      Math.abs(currentAngle - point - Math.PI * 2),
-      Math.abs(currentAngle - point + Math.PI * 2)
-    );
-    minDist = Math.min(minDist, dist);
-  }
-  
-  // Speed modulation: slow down near pause, pause briefly, speed back up
-  const pauseThreshold = 0.2; // Start slowing at this distance
-  const pauseZone = 0.05; // Actual pause zone
-  
-  let speed;
-  if (minDist < pauseZone) {
-    speed = 0.02; // Very slow during pause (not full stop to avoid getting stuck)
-  } else if (minDist < pauseThreshold) {
-    // Smooth ease in/out using cosine
-    const t = (minDist - pauseZone) / (pauseThreshold - pauseZone);
-    speed = baseSpeed * (1 - Math.cos(t * Math.PI)) / 2;
+  if (isInPause) {
+    // In pause state
+    const pauseElapsed = time - pauseStartTime;
+    
+    if (pauseElapsed >= PAUSE_DURATION) {
+      // Pause finished, start rotating to next target
+      isInPause = false;
+      rotationPhaseTime = 0;
+      // Next target is 180° away
+      currentTargetAngle = (currentTargetAngle + Math.PI) % (Math.PI * 2);
+    }
   } else {
-    speed = baseSpeed;
+    // In rotation state
+    rotationPhaseTime += deltaTime;
+    
+    // Calculate progress through rotation (0 to 1)
+    const rotationDuration = ROTATION_DISTANCE / BASE_ROTATION_SPEED;
+    const progress = Math.min(rotationPhaseTime / rotationDuration, 1);
+    
+    // Apply easing at start and end
+    let easedProgress;
+    if (progress < EASE_DURATION / rotationDuration) {
+      // Ease in at start
+      const t = progress / (EASE_DURATION / rotationDuration);
+      easedProgress = (progress / (EASE_DURATION / rotationDuration)) * (1 - Math.cos(t * Math.PI / 2));
+    } else if (progress > 1 - (EASE_DURATION / rotationDuration)) {
+      // Ease out at end
+      const t = (progress - (1 - EASE_DURATION / rotationDuration)) / (EASE_DURATION / rotationDuration);
+      const easeOutStart = 1 - (EASE_DURATION / rotationDuration);
+      easedProgress = easeOutStart + (EASE_DURATION / rotationDuration) * Math.sin(t * Math.PI / 2);
+    } else {
+      // Linear in middle
+      easedProgress = progress;
+    }
+    
+    // Calculate current angle
+    const startAngle = (currentTargetAngle - Math.PI + Math.PI * 2) % (Math.PI * 2);
+    const currentAngle = startAngle + easedProgress * ROTATION_DISTANCE;
+    
+    // Apply rotation
+    topPyramid.rotation.y = currentAngle;
+    bottomPyramid.rotation.y = currentAngle;
+    
+    // Check if rotation complete
+    if (progress >= 1) {
+      // Enter pause state
+      isInPause = true;
+      pauseStartTime = time;
+      // Snap to exact target angle
+      topPyramid.rotation.y = currentTargetAngle;
+      bottomPyramid.rotation.y = currentTargetAngle;
+    }
   }
-  
-  rotationTime += speed * 0.01;
-  
-  // Apply rotation
-  topPyramid.rotation.y = rotationTime;
-  bottomPyramid.rotation.y = rotationTime;
   
   // Bob animation (middle ground, continues during pause)
   topPyramid.position.y = (1.1 * logoScale) + Math.sin(time) * 0.065;
