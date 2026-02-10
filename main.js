@@ -191,22 +191,23 @@ function animate() {
     
     // Apply easing at start and end
     let easedProgress;
-    if (progress < EASE_DURATION / rotationDuration) {
-      // Ease in at start
-      const t = progress / (EASE_DURATION / rotationDuration);
-      easedProgress = (progress / (EASE_DURATION / rotationDuration)) * (1 - Math.cos(t * Math.PI / 2));
-    } else if (progress > 1 - (EASE_DURATION / rotationDuration)) {
-      // Ease out at end
-      const t = (progress - (1 - EASE_DURATION / rotationDuration)) / (EASE_DURATION / rotationDuration);
-      const easeOutStart = 1 - (EASE_DURATION / rotationDuration);
-      easedProgress = easeOutStart + (EASE_DURATION / rotationDuration) * Math.sin(t * Math.PI / 2);
+    const easeFraction = EASE_DURATION / rotationDuration;
+    
+    if (progress < easeFraction) {
+      // Ease in at start using sine
+      const t = progress / easeFraction;
+      easedProgress = easeFraction * (1 - Math.cos(t * Math.PI / 2));
+    } else if (progress > 1 - easeFraction) {
+      // Ease out at end using sine
+      const t = (progress - (1 - easeFraction)) / easeFraction;
+      easedProgress = (1 - easeFraction) + easeFraction * Math.sin(t * Math.PI / 2);
     } else {
       // Linear in middle
       easedProgress = progress;
     }
     
-    // Calculate current angle
-    const startAngle = (currentTargetAngle - Math.PI / 2 + Math.PI * 2) % (Math.PI * 2);
+    // Calculate current angle (start from previous target, rotate to current target)
+    const startAngle = (currentTargetAngle - ROTATION_DISTANCE + Math.PI * 4) % (Math.PI * 2);
     const currentAngle = startAngle + easedProgress * ROTATION_DISTANCE;
     
     // Apply rotation
