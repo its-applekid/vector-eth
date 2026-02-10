@@ -83,23 +83,18 @@ const createRetroMaterial = (color) => {
 // Scale up on mobile for better vertical fill
 const logoScale = isMobile ? 1.8 : 1;
 
-// Official Ethereum logo proportions from SVG (viewBox: 540 × 879.4)
-// Top pyramid: height 607.4 (0 to 607.4) = 1.125x base width
-// Bottom pyramid: height 220.9 (658.5 to 879.4) = 0.409x base width
-// Gap: 51.1 (607.4 to 658.5) = 0.095x base width
-
-// Top pyramid - precise Ethereum proportions
+// Top pyramid - less tall than before
 const topPyramidGeometry = new THREE.ConeGeometry(
-  logoScale,       // base radius (width)
-  logoScale * 1.125, // height = 1.125x width (from official SVG)
-  4                // 4 radial segments = square base
+  logoScale,      // base radius
+  logoScale * 1.8, // height (reduced from 2.5)
+  4               // 4 radial segments = square base
 );
 
-// Bottom pyramid - precise Ethereum proportions
+// Bottom pyramid
 const bottomPyramidGeometry = new THREE.ConeGeometry(
-  logoScale,       // base radius (width)
-  logoScale * 0.409, // height = 0.409x width (from official SVG)
-  4                // 4 radial segments = square base
+  logoScale,      // base radius
+  logoScale * 1.5, // height
+  4               // 4 radial segments = square base
 );
 
 // Create custom material with transparency
@@ -122,7 +117,7 @@ const topPyramid = new THREE.Mesh(
   topPyramidGeometry,
   createTransparentMaterial(0x8c8cff, 0.8) // Translucent purple-blue
 );
-topPyramid.position.y = (1.125 / 2) * logoScale; // Center at half height
+topPyramid.position.y = 1.5 * logoScale;
 topPyramid.rotation.y = Math.PI / 4; // Rotate 45° so edges face front
 scene.add(topPyramid);
 
@@ -131,8 +126,7 @@ const bottomPyramid = new THREE.Mesh(
   bottomPyramidGeometry,
   createTransparentMaterial(0x4c4ccc, 0.8) // Translucent darker blue
 );
-// Position: gap (0.095) + half bottom height (0.409/2)
-bottomPyramid.position.y = -(0.095 + 0.409 / 2) * logoScale;
+bottomPyramid.position.y = -1.2 * logoScale;
 bottomPyramid.rotation.x = Math.PI; // Flip upside down
 bottomPyramid.rotation.y = Math.PI / 4; // Match rotation
 scene.add(bottomPyramid);
@@ -167,11 +161,9 @@ function animate() {
   topPyramid.rotation.y = time * 0.5;
   bottomPyramid.rotation.y = time * 0.5;
   
-  // Subtle bob animation (reduced amplitude)
-  const topBaseY = (1.125 / 2) * logoScale;
-  const bottomBaseY = -(0.095 + 0.409 / 2) * logoScale;
-  topPyramid.position.y = topBaseY + Math.sin(time) * 0.03;
-  bottomPyramid.position.y = bottomBaseY - Math.sin(time) * 0.03;
+  // Bob animation (middle ground between 0.1 and 0.03)
+  topPyramid.position.y = (1.5 * logoScale) + Math.sin(time) * 0.065;
+  bottomPyramid.position.y = (-1.2 * logoScale) - Math.sin(time) * 0.065;
   
   // Update shader time
   topPyramid.material.uniforms.time.value = time;
