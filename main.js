@@ -80,23 +80,31 @@ const createRetroMaterial = (color) => {
 // Create Ethereum logo geometry (two pyramids)
 // Scale up on mobile for better vertical fill
 const logoScale = isMobile ? 1.8 : 1;
-const pyramidGeometry = new THREE.TetrahedronGeometry(logoScale, 0); // Low poly!
 
-// Top pyramid (pointing up)
+// Square-based pyramid (like Great Pyramids) - flat base, pointed top
+const topPyramidGeometry = new THREE.ConeGeometry(
+  logoScale,      // base radius
+  logoScale * 1.2, // height (slightly taller for better proportions)
+  4               // 4 radial segments = square base
+);
+
+// Top pyramid (flat bottom, point up)
 const topPyramid = new THREE.Mesh(
-  pyramidGeometry,
+  topPyramidGeometry,
   createRetroMaterial(0x8c8cff) // Purple-ish blue
 );
 topPyramid.position.y = 0.6 * logoScale;
+topPyramid.rotation.y = Math.PI / 4; // Rotate 45° so edges face front
 scene.add(topPyramid);
 
-// Bottom pyramid (pointing down - flip it)
+// Bottom pyramid (flat top, point down - flip the same geometry)
 const bottomPyramid = new THREE.Mesh(
-  pyramidGeometry,
+  topPyramidGeometry,
   createRetroMaterial(0x4c4ccc) // Darker blue
 );
 bottomPyramid.position.y = -0.6 * logoScale;
 bottomPyramid.rotation.x = Math.PI; // Flip upside down
+bottomPyramid.rotation.y = Math.PI / 4; // Match rotation
 scene.add(bottomPyramid);
 
 // Add some retro stars in the background

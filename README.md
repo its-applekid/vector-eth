@@ -34,9 +34,9 @@ npm run preview
 
 ## Ethereum Logo Geometry
 
-The logo is composed of two tetrahedrons (4-sided pyramids):
-- Top pyramid pointing up (light purple-blue)
-- Bottom pyramid pointing down (darker blue)
+The logo is composed of two square-based pyramids:
+- Top pyramid: flat base (like Great Pyramids), point up (light purple-blue)
+- Bottom pyramid: flat top, point down (inverted, darker blue)
 
 Both pyramids rotate in sync with a gentle floating animation.
 
