@@ -162,7 +162,7 @@ let pauseStartTime = 0; // When current pause started
 const PAUSE_DURATION = 2.0; // 2 seconds
 const ROTATION_DISTANCE = Math.PI / 2; // 90° between pauses
 const BASE_ROTATION_SPEED = Math.PI / 4; // Speed for 2-second rotation (90° / 2s)
-const EASE_DURATION = 0.4; // Ease in/out duration (in seconds)
+const EASE_DURATION = 1.0; // Ease in/out duration - entire rotation is eased (1s in, 1s out)
 
 function animate() {
   requestAnimationFrame(animate);
